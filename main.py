@@ -2,6 +2,7 @@ import os
 import yaml
 from pydantic import BaseModel
 from crewai import Agent, Task, Crew, Process, LLM
+from providers import create_llm_from_config
 from dotenv import load_dotenv
 
 # 📚 Import necessary libraries
@@ -19,13 +20,6 @@ def load_llms():
     """Load LLM configurations from YAML file"""
     with open("config/llms.yaml", "r") as file:
         llm_configs = yaml.safe_load(file)
-    
-    # Process environment variables in config
-    for llm_name, config in llm_configs.items():
-        for key, value in config.items():
-            if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
-                env_var = value[2:-1]
-                config[key] = os.environ.get(env_var, "")
     
     return llm_configs
 
@@ -50,38 +44,13 @@ def get_llm(llm_name=None):
     
     # Get the LLM config
     config = llm_configs[llm_name]
-    llm_type = config.get("type", "").lower()
     
-    # 🔀 Initialize the proper LLM based on type
-    if llm_type == "ollama":
-        return LLM(
-            model=config.get("model"),
-            base_url=config.get("base_url")
-        )
-    
-    elif llm_type == "gemini":
-        # Extract the model name and ensure it's properly formatted
-        model_name = config.get("model")
-        formatted_model = f"gemini/{model_name}"
-        
-        # Resolve any environment variables in the API key
-        api_key = config.get("api_key")
-        if isinstance(api_key, str) and api_key.startswith("${") and api_key.endswith("}"):
-            env_var = api_key[2:-1]  # Extract environment variable name
-            api_key = os.environ.get(env_var)
-            
-            if not api_key:
-                raise ValueError(f"API key for Gemini not found in environment variable {env_var}")
-        
-        # Return configured LLM instance
-        return LLM(
-            model=formatted_model,
-            api_key=api_key,
-            temperature=config.get("temperature", 0.7)
-        )
-    
-    else:
-        raise ValueError(f"Unsupported LLM type: {llm_type}")
+    try:
+        # Use the provider system to create the LLM
+        return create_llm_from_config(config)
+    except ValueError as e:
+        # Add more context to the error
+        raise ValueError(f"Error creating LLM '{llm_name}': {str(e)}")
 
 # 🤖 Load agent configurations with topic replacement
 def load_agents(topic, llm_name=None, custom_llm=None):
@@ -134,7 +103,6 @@ def load_tasks(topic, agents, llm_name=None, custom_llm=None):
         tasks.append(Task(
             description=description,
             expected_output=expected_output,
-            llm=llm_to_use,
             agent=agents[agent_name]
         ))
     
