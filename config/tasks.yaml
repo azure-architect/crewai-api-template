@@ -1,0 +1,10 @@
+# config/tasks.yaml
+research_task:
+  description: "Research the latest trends in {topic}. Provide key insights about {topic} development, challenges, and future directions."
+  expected_output: "A summary of 6 to 8 key trends in {topic}."
+  agent: "researcher"
+
+write_task:
+  description: "Write an article about {topic} trends based on research. Focus on making {topic} accessible to a general audience."
+  expected_output: "A 6 to 8 paragraph article summarizing the trends in {topic}."
+  agent: "writer"
