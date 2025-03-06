@@ -44,3 +44,5 @@ logs/
 
 # Local configuration
 config.local.yaml
+# macOS
+.DS_Store
