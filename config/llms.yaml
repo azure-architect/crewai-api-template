@@ -9,3 +9,10 @@ gemini_remote:
   model: gemini-1.5-flash  # or another Gemini model
   api_key: ${GEMINI_API_KEY}
   temperature: 0.7
+
+msty_local:
+  type: openai
+  model: "openai/command-r7b:7b-12-2024-fp16"  # Updated to match available model name
+  api_base: "http://localhost:10000/v1"  # Added /v1 to the base URL
+  api_key: "dummy-key"  # Added dummy key for compatibility
+  temperature: 0.7
